@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func SaveFile(url string) error {
@@ -41,4 +43,34 @@ func SaveFile(url string) error {
 	fmt.Printf("Arquivo '%s' baixado com sucesso!\n", nomeArquivo)
 
 	return nil
+}
+
+func ExtractFilenameFromURL(fileURL string) (string, error) {
+	// Parse a URL
+	parsedURL, err := url.Parse(fileURL)
+	if err != nil {
+		return "", err
+	}
+
+	// Extrai o nome do arquivo da última barra no caminho
+	filePath := filepath.Base(parsedURL.Path)
+	fmt.Println(filePath)
+	// Divide o caminho usando o símbolo de percentagem (%)
+	parts := strings.Split(filePath, "%")
+	fmt.Println(parts[0], parts[1], parts[2])
+	// Verifica se há pelo menos quatro partes (antes e depois dos percentuais)
+	if len(parts) < 4 {
+		return "", fmt.Errorf("A URL não contém quatro partes separadas por percentuais")
+	}
+
+	// Junta as partes 2, 3 e 4 para obter o nome do arquivo desejado
+	fileName := parts[2] + "%" + parts[3]
+
+	// Decodifica os percentuais para obter o nome do arquivo correto
+	fileName, err = url.QueryUnescape(fileName)
+	if err != nil {
+		return "", err
+	}
+
+	return fileName, nil
 }
